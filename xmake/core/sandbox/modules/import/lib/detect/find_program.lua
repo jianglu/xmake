@@ -42,6 +42,7 @@ local checking  = nil
 -- do check
 function sandbox_lib_detect_find_program._do_check(program, opt)
 
+    print("_do_check", program)
     -- do not attempt to run program? check it fastly
     if opt.norun then
         return os.isfile(program)
@@ -49,10 +50,12 @@ function sandbox_lib_detect_find_program._do_check(program, opt)
 
     -- no check script? attempt to run it directly
     if not opt.check then
+        print("_do_check 1", program)
         local ok, errors = os.runv(program, {"--version"}, {envs = opt.envs})
         if not ok and option.get("verbose") and option.get("diagnosis") then
             utils.cprint("${color.warning}checkinfo: ${clear dim}" .. errors)
         end
+        print("_do_check 2", program, ok)
         return ok
     end
 
@@ -60,9 +63,13 @@ function sandbox_lib_detect_find_program._do_check(program, opt)
     local ok = false
     local errors = nil
     if type(opt.check) == "string" then
+        print("_do_check 3", program)
         ok, errors = os.runv(program, {opt.check}, {envs = opt.envs})
+        print("_do_check 33", program, ok, errors)
     else
+        print("_do_check 4", program)
         ok, errors = sandbox.load(opt.check, program)
+        print("_do_check 44", program, ok, errors)
     end
 
     -- check failed? print verbose error info
@@ -97,6 +104,7 @@ end
 
 -- find program from the given paths
 function sandbox_lib_detect_find_program._find_from_paths(name, paths, opt)
+    print("_find_from_paths", name)
 
     -- attempt to check it from the given directories
     if not path.is_absolute(name) then
@@ -142,6 +150,7 @@ end
 
 -- find program from the xmake packages
 function sandbox_lib_detect_find_program._find_from_packages(name, opt)
+    print("_find_from_packages", name)
 
     -- get the manifest file of package, e.g. ~/.xmake/packages/g/git/1.1.12/ed41d5327fad3fc06fe376b4a94f62ef/manifest.txt
     opt = opt or {}
@@ -264,6 +273,7 @@ end
 --
 function sandbox_lib_detect_find_program.main(name, opt)
 
+    print("finding program", name)
     -- @note avoid detect the same program in the same time leading to deadlock if running in the coroutine (e.g. ccache)
     local coroutine_running = scheduler.co_running()
     if coroutine_running then
@@ -283,6 +293,7 @@ function sandbox_lib_detect_find_program.main(name, opt)
 
     -- attempt to get result from cache first
     local result = detectcache:get2(cachekey, name)
+    print("find_program, cache result", cachekey, name, result)
     if result ~= nil and not opt.force then
         return result and result or nil
     end
@@ -299,9 +310,11 @@ function sandbox_lib_detect_find_program.main(name, opt)
         paths = table.join(table.wrap(opt.paths or opt.pathes), pathenv)
     end
 
+    print("do find program", name)
     -- find executable program
     checking = coroutine_running and name or nil
     result = sandbox_lib_detect_find_program._find(name, paths, opt)
+    print("find program result", result)
     checking = nil
 
     -- cache result

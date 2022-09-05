@@ -394,9 +394,12 @@ end
 -- check the given tool path
 function _instance:_checktool(toolkind, toolpath)
 
+    print("_checktool ..", toolkind, toolpath)
+
     -- get result from cache first
     local cachekey = self:cachekey() .. "_checktool" .. toolkind
     local result = toolchain._memcache():get3(cachekey, toolkind, toolpath)
+    print("cache result", result)
     if result then
         return result[1], result[2]
     end
@@ -434,7 +437,9 @@ function _instance:_checktool(toolkind, toolpath)
     end
 
     -- find tool program
+    print("finding tool", toolpath, cachekey)
     local tool = find_tool(toolpath, {cachekey = cachekey, program = program or toolpath, paths = self:bindir(), envs = self:get("runenvs")})
+    print("find result", tool)
     if tool then
         program = tool.program
         toolname = toolname or tool.name
